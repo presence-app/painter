@@ -52,6 +52,7 @@ class _PainterState extends State<Painter> {
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
         onTapUp: _onTapUp,
+        onLongPress: () => _onLongPress(),
         child: child,
       );
     }
@@ -86,6 +87,18 @@ class _PainterState extends State<Painter> {
       details.globalPosition,
     );
     widget.painterController._pathHistory.addTap(pos);
+    widget.painterController._pathHistory.endCurrent();
+    widget.painterController._notifyListeners();
+  }
+
+  void _onLongPress() {
+    final size = (context.findRenderObject() as RenderBox).size;
+    widget.painterController._pathHistory.addRect(Rect.fromLTWH(
+      0,
+      0,
+      size.width,
+      size.height,
+    ));
     widget.painterController._pathHistory.endCurrent();
     widget.painterController._notifyListeners();
   }
@@ -150,6 +163,18 @@ class _PathHistory {
     if (!_inDrag) {
       _paths.clear();
       _redoPaths.clear();
+    }
+  }
+
+  void addRect(Rect rect) {
+    if (!_inDrag) {
+      _inDrag = true;
+      Path path = Path();
+      path.addRect(rect);
+      _paths.add(MapEntry<Path, Paint>(
+        path,
+        currentPaint..style = PaintingStyle.fill,
+      ));
     }
   }
 
