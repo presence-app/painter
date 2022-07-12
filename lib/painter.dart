@@ -96,6 +96,7 @@ class _PainterPainter extends CustomPainter {
 }
 
 class _PathHistory {
+  final List<MapEntry<Path, Paint>> _redoPaths;
   final List<MapEntry<Path, Paint>> _paths;
   Paint currentPaint;
   final Paint _backgroundPaint;
@@ -104,7 +105,8 @@ class _PathHistory {
   bool get isEmpty => _paths.isEmpty || (_paths.length == 1 && _inDrag);
 
   _PathHistory()
-      : _paths = <MapEntry<Path, Paint>>[],
+      : _paths = [],
+        _redoPaths = [],
         _inDrag = false,
         _backgroundPaint = Paint()..blendMode = BlendMode.dstOver,
         currentPaint = Paint()
@@ -118,13 +120,24 @@ class _PathHistory {
 
   void undo() {
     if (!_inDrag) {
+      if (_paths.isNotEmpty) {
+        _redoPaths.add(_paths.last);
+      }
       _paths.removeLast();
+    }
+  }
+
+  void redo() {
+    if (_redoPaths.isNotEmpty) {
+      _paths.add(_redoPaths.last);
+      _redoPaths.removeLast();
     }
   }
 
   void clear() {
     if (!_inDrag) {
       _paths.clear();
+      _redoPaths.clear();
     }
   }
 
@@ -273,6 +286,15 @@ class PainterController extends ChangeNotifier {
   void undo() {
     if (!isFinished()) {
       _pathHistory.undo();
+      notifyListeners();
+    }
+  }
+
+  /// Redoes the last drawing action (but not a background color change).
+  /// If the picture is already finished, this is a no-op and does nothing.
+  void redo() {
+    if (!isFinished()) {
+      _pathHistory.redo();
       notifyListeners();
     }
   }

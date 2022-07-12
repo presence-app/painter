@@ -74,6 +74,11 @@ class _ExamplePageState extends State<ExamplePage> {
           },
         ),
         IconButton(
+          icon: const Icon(Icons.redo),
+          tooltip: 'Redo',
+          onPressed: _controller.redo,
+        ),
+        IconButton(
           icon: const Icon(Icons.delete),
           tooltip: 'Clear',
           onPressed: _controller.clear,
