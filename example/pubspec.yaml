@@ -10,7 +10,7 @@ dependencies:
     sdk: flutter
   painter:
     path: ../
-  flutter_colorpicker: ^0.4.0
+  flutter_colorpicker: ^1.0.3
 
 flutter:
   uses-material-design: true

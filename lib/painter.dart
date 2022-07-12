@@ -155,7 +155,9 @@ class _PathHistory {
       canvas.drawPath(path.key, p);
     }
     canvas.drawRect(
-        Rect.fromLTWH(0.0, 0.0, size.width, size.height), _backgroundPaint);
+      Rect.fromLTWH(0.0, 0.0, size.width, size.height),
+      _backgroundPaint,
+    );
     canvas.restore();
   }
 }
@@ -258,8 +260,11 @@ class PainterController extends ChangeNotifier {
     }
     paint.style = PaintingStyle.stroke;
     paint.strokeWidth = thickness;
+    paint.strokeCap = StrokeCap.round;
+    paint.strokeJoin = StrokeJoin.round;
     _pathHistory.currentPaint = paint;
     _pathHistory.setBackgroundColor(backgroundColor);
+
     notifyListeners();
   }
 

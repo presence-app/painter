@@ -58,27 +58,30 @@ class _ExamplePageState extends State<ExamplePage> {
     } else {
       actions = <Widget>[
         IconButton(
-            icon: const Icon(
-              Icons.undo,
-            ),
-            tooltip: 'Undo',
-            onPressed: () {
-              if (_controller.isEmpty) {
-                showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) =>
-                        const Text('Nothing to undo'));
-              } else {
-                _controller.undo();
-              }
-            }),
+          icon: const Icon(
+            Icons.undo,
+          ),
+          tooltip: 'Undo',
+          onPressed: () {
+            if (_controller.isEmpty) {
+              showModalBottomSheet(
+                  context: context,
+                  builder: (BuildContext context) =>
+                      const Text('Nothing to undo'));
+            } else {
+              _controller.undo();
+            }
+          },
+        ),
         IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: 'Clear',
-            onPressed: _controller.clear),
+          icon: const Icon(Icons.delete),
+          tooltip: 'Clear',
+          onPressed: _controller.clear,
+        ),
         IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: () => _show(_controller.finish(), context)),
+          icon: const Icon(Icons.check),
+          onPressed: () => _show(_controller.finish(), context),
+        ),
       ];
     }
     return Scaffold(
@@ -91,7 +94,11 @@ class _ExamplePageState extends State<ExamplePage> {
         ),
       ),
       body: Center(
-          child: AspectRatio(aspectRatio: 1.0, child: Painter(_controller))),
+        child: AspectRatio(
+          aspectRatio: 1.0,
+          child: Painter(_controller),
+        ),
+      ),
     );
   }
 
@@ -106,28 +113,30 @@ class _ExamplePageState extends State<ExamplePage> {
           title: const Text('View your image'),
         ),
         body: Container(
-            alignment: Alignment.center,
-            child: FutureBuilder<Uint8List>(
-              future: picture.toPNG(),
-              builder:
-                  (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.done:
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return Image.memory(snapshot.data!);
-                    }
-                  default:
-                    return const FractionallySizedBox(
-                      widthFactor: 0.1,
-                      alignment: Alignment.center,
-                      child: AspectRatio(
-                          aspectRatio: 1.0, child: CircularProgressIndicator()),
-                    );
-                }
-              },
-            )),
+          alignment: Alignment.center,
+          child: FutureBuilder<Uint8List>(
+            future: picture.toPNG(),
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.done:
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    return Image.memory(snapshot.data!);
+                  }
+                default:
+                  return const FractionallySizedBox(
+                    widthFactor: 0.1,
+                    alignment: Alignment.center,
+                    child: AspectRatio(
+                      aspectRatio: 1.0,
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+              }
+            },
+          ),
+        ),
       );
     }));
   }
@@ -142,8 +151,7 @@ class DrawBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
       Flexible(
-        child: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
+        child: StatefulBuilder(builder: (context, setState) {
           return Slider(
             value: _controller.thickness,
             onChanged: (double value) => setState(() {
@@ -155,7 +163,7 @@ class DrawBar extends StatelessWidget {
           );
         }),
       ),
-      StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+      StatefulBuilder(builder: (context, setState) {
         return RotatedBox(
           quarterTurns: _controller.eraseMode ? 2 : 0,
           child: IconButton(
