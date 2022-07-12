@@ -40,8 +40,10 @@ class _PainterState extends State<Painter> {
   Widget build(BuildContext context) {
     Widget child = CustomPaint(
       willChange: true,
-      painter: _PainterPainter(widget.painterController._pathHistory,
-          repaint: widget.painterController),
+      painter: _PainterPainter(
+        widget.painterController._pathHistory,
+        repaint: widget.painterController,
+      ),
     );
     child = ClipRect(child: child);
     if (!_finished) {
@@ -49,6 +51,7 @@ class _PainterState extends State<Painter> {
         onPanStart: _onPanStart,
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
+        onTapUp: _onTapUp,
         child: child,
       );
     }
@@ -74,6 +77,15 @@ class _PainterState extends State<Painter> {
   }
 
   void _onPanEnd(DragEndDetails end) {
+    widget.painterController._pathHistory.endCurrent();
+    widget.painterController._notifyListeners();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    Offset pos = (context.findRenderObject() as RenderBox).globalToLocal(
+      details.globalPosition,
+    );
+    widget.painterController._pathHistory.addTap(pos);
     widget.painterController._pathHistory.endCurrent();
     widget.painterController._notifyListeners();
   }
@@ -138,6 +150,18 @@ class _PathHistory {
     if (!_inDrag) {
       _paths.clear();
       _redoPaths.clear();
+    }
+  }
+
+  void addTap(Offset point) {
+    if (!_inDrag) {
+      _inDrag = true;
+      Path path = Path();
+      path.addOval(Rect.fromCircle(
+        center: point,
+        radius: currentPaint.strokeWidth / 10,
+      ));
+      _paths.add(MapEntry<Path, Paint>(path, currentPaint));
     }
   }
 
