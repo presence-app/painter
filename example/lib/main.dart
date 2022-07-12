@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -86,6 +87,27 @@ class _ExamplePageState extends State<ExamplePage> {
         IconButton(
           icon: const Icon(Icons.check),
           onPressed: () => _show(_controller.finish(), context),
+        ),
+        IconButton(
+          icon: const Icon(Icons.check),
+          tooltip: 'See json',
+          onPressed: () {
+            final json = _controller.toJson();
+
+            String getPrettyJSONString(jsonObject) {
+              var encoder = const JsonEncoder.withIndent("     ");
+              return encoder.convert(jsonObject);
+            }
+
+            showModalBottomSheet(
+              context: context,
+              builder: (context) => SingleChildScrollView(
+                child: Text(
+                  getPrettyJSONString(json),
+                ),
+              ),
+            );
+          },
         ),
       ];
     }

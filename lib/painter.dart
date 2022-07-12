@@ -168,6 +168,9 @@ class PainterController extends ChangeNotifier {
   /// Creates a new instance for the use in a [Painter] widget.
   PainterController() : _pathHistory = _PathHistory();
 
+  PainterController.fromJson(Map<String, dynamic> json)
+      : _pathHistory = _PathHistory.fromJson(json);
+
   /// Returns true if nothing has been drawn yet.
   bool get isEmpty => _pathHistory.isEmpty;
 
@@ -287,6 +290,10 @@ class PainterController extends ChangeNotifier {
       return PictureDetails(
           recorder.endRecording(), size.width.floor(), size.height.floor());
     }
+  }
+
+  Map<String, dynamic> toJson() {
+    return _pathHistory.toJson();
   }
 
   /// Returns true if this drawing is finished.

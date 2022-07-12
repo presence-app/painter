@@ -4,6 +4,21 @@ abstract class _PathInfo {
   const _PathInfo();
 
   Path get path;
+
+  Map<String, dynamic> get json;
+
+  static _PathInfo _fromJson(Map<String, dynamic> data) {
+    switch (data['type']) {
+      case 'line':
+        return _LinePathInfo.fromJson(data);
+      case 'circle':
+        return _CirclePathInfo.fromJson(data);
+      case 'rect':
+        return _RectPathInfo.fromJson(data);
+      default:
+        throw UnsupportedError('${data['type']} is not a supported path type');
+    }
+  }
 }
 
 class _LinePathInfo extends _PathInfo {
@@ -25,6 +40,38 @@ class _LinePathInfo extends _PathInfo {
     }
 
     return path;
+  }
+
+  @override
+  Map<String, dynamic> get json {
+    return {
+      'type': 'line',
+      'startingPointX': startingPoint.dx,
+      'startingPointY': startingPoint.dy,
+      'lines': lines.map<Map<String, dynamic>>((line) {
+        return {
+          'x': line.dx,
+          'y': line.dy,
+        };
+      }).toList(),
+    };
+  }
+
+  static _LinePathInfo fromJson(Map<String, dynamic> json) {
+    return _LinePathInfo(
+      startingPoint: Offset(
+        json['startingPointX'].toDouble(),
+        json['startingPointY'].toDouble(),
+      ),
+      lines: (json['lines'] as List)
+          .cast<Map<String, dynamic>>()
+          .map<Offset>((offset) {
+        return Offset(
+          offset['x'].toDouble(),
+          offset['y'].toDouble(),
+        );
+      }).toList(),
+    );
   }
 }
 
@@ -48,6 +95,26 @@ class _CirclePathInfo extends _PathInfo {
 
     return path;
   }
+
+  @override
+  Map<String, dynamic> get json {
+    return {
+      'type': 'circle',
+      'pointX': point.dx,
+      'pointY': point.dy,
+      'radius': radius,
+    };
+  }
+
+  static _CirclePathInfo fromJson(Map<String, dynamic> json) {
+    return _CirclePathInfo(
+      point: Offset(
+        json['pointX'].toDouble(),
+        json['pointY'].toDouble(),
+      ),
+      radius: json['radius'].toDouble(),
+    );
+  }
 }
 
 class _RectPathInfo extends _PathInfo {
@@ -63,6 +130,28 @@ class _RectPathInfo extends _PathInfo {
 
     return path;
   }
+
+  @override
+  Map<String, dynamic> get json {
+    return {
+      'type': 'rect',
+      'left': rect.left,
+      'top': rect.top,
+      'right': rect.right,
+      'bottom': rect.bottom,
+    };
+  }
+
+  static _RectPathInfo fromJson(Map<String, dynamic> json) {
+    return _RectPathInfo(
+      rect: Rect.fromLTRB(
+        json['left'].toDouble(),
+        json['top'].toDouble(),
+        json['right'].toDouble(),
+        json['bottom'].toDouble(),
+      ),
+    );
+  }
 }
 
 class _Path {
@@ -72,24 +161,59 @@ class _Path {
   const _Path({required this.info, required this.paint});
 }
 
+extension _PaintExtension on Paint {
+  Map<String, dynamic> toJson() {
+    return {
+      'color': color.toHex(),
+      'strokeWidth': strokeWidth,
+      'style': style.name,
+    };
+  }
+
+  static Paint fromJson(Map<String, dynamic> json) {
+    return Paint()
+      ..color = _HexColor.fromHex(json['color'])
+      ..strokeWidth = json['strokeWidth']
+      ..style = PaintingStyle.values.firstWhere(
+        (style) => style.name == json['style'],
+        orElse: () => PaintingStyle.fill,
+      );
+  }
+}
+
+extension _HexColor on Color {
+  /// String is in the format "aabbcc" or "ffaabbcc" with an optional leading "#".
+  static Color fromHex(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
+  String toHex() => '${red.toRadixString(16).padLeft(2, '0')}'
+      '${green.toRadixString(16).padLeft(2, '0')}'
+      '${blue.toRadixString(16).padLeft(2, '0')}'
+      '${alpha.toRadixString(16).padLeft(2, '0')}';
+}
+
 class _PathHistory {
-  final List<_Path> _redoPaths;
-  final List<_Path> _paths;
+  final List<_Path> _redoPaths = [];
+  final List<_Path> _paths = [];
   Paint currentPaint;
-  final Paint _backgroundPaint;
-  bool _inDrag;
+  final Paint _backgroundPaint = Paint()..blendMode = BlendMode.dstOver;
+  bool _inDrag = false;
 
   bool get isEmpty => _paths.isEmpty || (_paths.length == 1 && _inDrag);
 
   _PathHistory()
-      : _paths = [],
-        _redoPaths = [],
-        _inDrag = false,
-        _backgroundPaint = Paint()..blendMode = BlendMode.dstOver,
-        currentPaint = Paint()
+      : currentPaint = Paint()
           ..color = Colors.black
           ..strokeWidth = 1.0
           ..style = PaintingStyle.fill;
+
+  factory _PathHistory.fromJson(Map<String, dynamic> json) {
+    return _PathHistory().._paths.addAll(_fromJson(json));
+  }
 
   void setBackgroundColor(Color backgroundColor) {
     _backgroundPaint.color = backgroundColor;
@@ -138,7 +262,7 @@ class _PathHistory {
           point: point,
           radius: currentPaint.strokeWidth,
         ),
-        paint: currentPaint,
+        paint: currentPaint..style = PaintingStyle.fill,
       ));
     }
   }
@@ -151,7 +275,7 @@ class _PathHistory {
           startingPoint: startPoint,
           lines: [],
         ),
-        paint: currentPaint,
+        paint: currentPaint..style = PaintingStyle.stroke,
       ));
     }
   }
@@ -179,14 +303,23 @@ class _PathHistory {
     canvas.restore();
   }
 
-  // Map<String, dynamic> toJson() {
-  //   _paths.map<Map<String, dynamic>>((entry) {
-  //     final path = entry.key;
-  //     final paint = entry.value;
+  Map<String, dynamic> toJson() {
+    return {
+      'paths': _paths.map<Map<String, dynamic>>((path) {
+        return {
+          'path': path.info.json,
+          'paint': path.paint.toJson(),
+        };
+      }).toList(),
+    };
+  }
 
-  //     return {
-  //       'a': path.
-  //     };
-  //   });
-  // }
+  static Iterable<_Path> _fromJson(Map<String, dynamic> json) {
+    return (json['paths'] as List).cast<Map<String, dynamic>>().map((e) {
+      final paint = _PaintExtension.fromJson(e['paint']);
+      final info = _PathInfo._fromJson(e['path']);
+
+      return _Path(info: info, paint: paint);
+    });
+  }
 }
