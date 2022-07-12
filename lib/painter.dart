@@ -7,6 +7,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart' hide Image;
 
+part 'history.dart';
+
 /// A very simple widget that supports drawing using touch.
 class Painter extends StatefulWidget {
   final PainterController painterController;
@@ -117,110 +119,6 @@ class _PainterPainter extends CustomPainter {
   @override
   bool shouldRepaint(_PainterPainter oldDelegate) {
     return true;
-  }
-}
-
-class _PathHistory {
-  final List<MapEntry<Path, Paint>> _redoPaths;
-  final List<MapEntry<Path, Paint>> _paths;
-  Paint currentPaint;
-  final Paint _backgroundPaint;
-  bool _inDrag;
-
-  bool get isEmpty => _paths.isEmpty || (_paths.length == 1 && _inDrag);
-
-  _PathHistory()
-      : _paths = [],
-        _redoPaths = [],
-        _inDrag = false,
-        _backgroundPaint = Paint()..blendMode = BlendMode.dstOver,
-        currentPaint = Paint()
-          ..color = Colors.black
-          ..strokeWidth = 1.0
-          ..style = PaintingStyle.fill;
-
-  void setBackgroundColor(Color backgroundColor) {
-    _backgroundPaint.color = backgroundColor;
-  }
-
-  void undo() {
-    if (!_inDrag) {
-      if (_paths.isNotEmpty) {
-        _redoPaths.add(_paths.last);
-      }
-      _paths.removeLast();
-    }
-  }
-
-  void redo() {
-    if (_redoPaths.isNotEmpty) {
-      _paths.add(_redoPaths.last);
-      _redoPaths.removeLast();
-    }
-  }
-
-  void clear() {
-    if (!_inDrag) {
-      _paths.clear();
-      _redoPaths.clear();
-    }
-  }
-
-  void addRect(Rect rect) {
-    if (!_inDrag) {
-      _inDrag = true;
-      Path path = Path();
-      path.addRect(rect);
-      _paths.add(MapEntry<Path, Paint>(
-        path,
-        currentPaint..style = PaintingStyle.fill,
-      ));
-    }
-  }
-
-  void addTap(Offset point) {
-    if (!_inDrag) {
-      _inDrag = true;
-      Path path = Path();
-      path.addOval(Rect.fromCircle(
-        center: point,
-        radius: currentPaint.strokeWidth / 10,
-      ));
-      _paths.add(MapEntry<Path, Paint>(path, currentPaint));
-    }
-  }
-
-  void add(Offset startPoint) {
-    if (!_inDrag) {
-      _inDrag = true;
-      Path path = Path();
-      path.moveTo(startPoint.dx, startPoint.dy);
-      _paths.add(MapEntry<Path, Paint>(path, currentPaint));
-    }
-  }
-
-  void updateCurrent(Offset nextPoint) {
-    if (_inDrag) {
-      Path path = _paths.last.key;
-      path.lineTo(nextPoint.dx, nextPoint.dy);
-    }
-  }
-
-  void endCurrent() {
-    _inDrag = false;
-  }
-
-  void draw(Canvas canvas, Size size) {
-    canvas.saveLayer(Offset.zero & size, Paint());
-    for (MapEntry<Path, Paint> path in _paths) {
-      Paint p = path.value;
-      canvas.drawPath(path.key, p);
-    }
-    canvas.drawRect(
-      Rect.fromLTWH(0.0, 0.0, size.width, size.height),
-      _backgroundPaint,
-    );
-    canvas.restore();
   }
 }
 
