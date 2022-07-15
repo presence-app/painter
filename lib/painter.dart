@@ -1,10 +1,6 @@
 /// Provides a widget and an associated controller for simple painting using touch.
 library painter;
 
-import 'dart:async';
-import 'dart:typed_data';
-import 'dart:ui';
-
 import 'package:flutter/material.dart' hide Image;
 
 part 'history.dart';
@@ -31,12 +27,7 @@ class _PainterState extends State<Painter> {
     widget.painterController._widgetFinish = _finish;
   }
 
-  Size _finish() {
-    setState(() {
-      _finished = true;
-    });
-    return context.size ?? const Size(0, 0);
-  }
+  void _finish() => setState(() => _finished = true);
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +41,7 @@ class _PainterState extends State<Painter> {
     child = ClipRect(child: child);
     if (!_finished) {
       child = GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onPanStart: _onPanStart,
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
@@ -124,13 +116,12 @@ class _PainterPainter extends CustomPainter {
 
 /// Used with a [Painter] widget to control drawing.
 class PainterController extends ChangeNotifier {
-  Color _drawColor = const Color.fromARGB(255, 0, 0, 0);
   bool _eraseMode = false;
 
   double _thickness = 1.0;
   bool finished = false;
   final _PathHistory _pathHistory;
-  ValueGetter<Size>? _widgetFinish;
+  VoidCallback? _widgetFinish;
 
   /// Creates a new instance for the use in a [Painter] widget.
   PainterController() : _pathHistory = _PathHistory();
@@ -153,11 +144,11 @@ class PainterController extends ChangeNotifier {
   }
 
   /// Retrieves the current draw color.
-  Color get drawColor => _drawColor;
+  Color get drawColor => _pathHistory.color;
 
   /// Sets the draw color.
   set drawColor(Color color) {
-    _drawColor = color;
+    _pathHistory.color = color;
     _updatePaint();
   }
 
@@ -230,6 +221,7 @@ class PainterController extends ChangeNotifier {
   void finish() {
     if (!isFinished()) {
       finished = true;
+      _widgetFinish?.call();
     }
   }
 

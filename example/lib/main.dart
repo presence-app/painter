@@ -187,10 +187,7 @@ class DrawBar extends StatelessWidget {
 class ColorPickerButton extends StatefulWidget {
   final PainterController _controller;
 
-  const ColorPickerButton(
-    this._controller, [
-    Key? key,
-  ]) : super(key: key);
+  const ColorPickerButton(this._controller, [Key? key]) : super(key: key);
 
   @override
   _ColorPickerButtonState createState() => _ColorPickerButtonState();
@@ -200,28 +197,34 @@ class _ColorPickerButtonState extends State<ColorPickerButton> {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-        icon: Icon(_iconData, color: _color),
-        tooltip: 'Change draw color',
-        onPressed: _pickColor);
+      icon: Icon(_iconData, color: _color),
+      tooltip: 'Change draw color',
+      onPressed: _pickColor,
+    );
   }
 
   void _pickColor() {
     Color pickerColor = _color;
     Navigator.of(context)
-        .push(MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (BuildContext context) {
-              return Scaffold(
-                  appBar: AppBar(
-                    title: const Text('Pick color'),
-                  ),
-                  body: Container(
-                      alignment: Alignment.center,
-                      child: ColorPicker(
-                        pickerColor: pickerColor,
-                        onColorChanged: (Color c) => pickerColor = c,
-                      )));
-            }))
+        .push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Pick color'),
+            ),
+            body: Container(
+              alignment: Alignment.center,
+              child: ColorPicker(
+                pickerColor: pickerColor,
+                onColorChanged: (Color c) => pickerColor = c,
+              ),
+            ),
+          );
+        },
+      ),
+    )
         .then((_) {
       setState(() {
         _color = pickerColor;
