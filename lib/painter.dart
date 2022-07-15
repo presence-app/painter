@@ -54,7 +54,7 @@ class _PainterState extends State<Painter> {
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
         onTapUp: _onTapUp,
-        onLongPress: () => _onLongPress(),
+        onLongPress: _onLongPress,
         child: child,
       );
     }
@@ -122,45 +122,13 @@ class _PainterPainter extends CustomPainter {
   }
 }
 
-/// Container that holds the size of a finished drawing and the drawed data as [Picture].
-class PictureDetails {
-  /// The drawings data as [Picture].
-  final Picture picture;
-
-  /// The width of the drawing.
-  final int width;
-
-  /// The height of the drawing.
-  final int height;
-
-  /// Creates an immutable instance with the given drawing information.
-  const PictureDetails(this.picture, this.width, this.height);
-
-  /// Converts the [picture] to an [Image].
-  Future<Image> toImage() => picture.toImage(width, height);
-
-  /// Converts the [picture] to a PNG and returns the bytes of the PNG.
-  ///
-  /// This might throw a [FlutterError], if flutter is not able to convert
-  /// the intermediate [Image] to a PNG.
-  Future<Uint8List> toPNG() async {
-    Image image = await toImage();
-    ByteData? data = await image.toByteData(format: ImageByteFormat.png);
-    if (data != null) {
-      return data.buffer.asUint8List();
-    } else {
-      throw FlutterError('Flutter failed to convert an Image to bytes!');
-    }
-  }
-}
-
 /// Used with a [Painter] widget to control drawing.
 class PainterController extends ChangeNotifier {
   Color _drawColor = const Color.fromARGB(255, 0, 0, 0);
   bool _eraseMode = false;
 
   double _thickness = 1.0;
-  PictureDetails? _cached;
+  bool finished = false;
   final _PathHistory _pathHistory;
   ValueGetter<Size>? _widgetFinish;
 
@@ -252,33 +220,16 @@ class PainterController extends ChangeNotifier {
     }
   }
 
-  /// Finishes drawing and returns the rendered [PictureDetails] of the drawing.
   /// The drawing is cached and on subsequent calls to this method, the cached
   /// drawing is returned.
   ///
   /// This might throw a [StateError] if this PainterController is not attached
   /// to a widget, or the associated widget's [Size.isEmpty].
-  PictureDetails finish() {
+  ///
+  /// If already finished, this does nothing
+  void finish() {
     if (!isFinished()) {
-      if (_widgetFinish != null) {
-        _cached = _render(_widgetFinish!());
-      } else {
-        throw StateError(
-            'Called finish on a PainterController that was not connected to a widget yet!');
-      }
-    }
-    return _cached!;
-  }
-
-  PictureDetails _render(Size size) {
-    if (size.isEmpty) {
-      throw StateError('Tried to render a picture with an invalid size!');
-    } else {
-      PictureRecorder recorder = PictureRecorder();
-      Canvas canvas = Canvas(recorder);
-      _pathHistory.draw(canvas, size);
-      return PictureDetails(
-          recorder.endRecording(), size.width.floor(), size.height.floor());
+      finished = true;
     }
   }
 
@@ -289,7 +240,5 @@ class PainterController extends ChangeNotifier {
   /// Returns true if this drawing is finished.
   ///
   /// Trying to modify a finished drawing is a no-op.
-  bool isFinished() {
-    return _cached != null;
-  }
+  bool isFinished() => finished;
 }

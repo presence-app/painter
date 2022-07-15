@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -85,11 +84,7 @@ class _ExamplePageState extends State<ExamplePage> {
         ),
         IconButton(
           icon: const Icon(Icons.check),
-          onPressed: () => _show(_controller.finish(), context),
-        ),
-        IconButton(
-          icon: const Icon(Icons.check),
-          tooltip: 'See json',
+          tooltip: 'Finish',
           onPressed: () {
             final json = _controller.toJson();
 
@@ -146,45 +141,6 @@ class _ExamplePageState extends State<ExamplePage> {
         ),
       ),
     );
-  }
-
-  void _show(PictureDetails picture, BuildContext context) {
-    setState(() {
-      _finished = true;
-    });
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (BuildContext context) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('View your image'),
-        ),
-        body: Container(
-          alignment: Alignment.center,
-          child: FutureBuilder<Uint8List>(
-            future: picture.toPNG(),
-            builder: (context, snapshot) {
-              switch (snapshot.connectionState) {
-                case ConnectionState.done:
-                  if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    return Image.memory(snapshot.data!);
-                  }
-                default:
-                  return const FractionallySizedBox(
-                    widthFactor: 0.1,
-                    alignment: Alignment.center,
-                    child: AspectRatio(
-                      aspectRatio: 1.0,
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-              }
-            },
-          ),
-        ),
-      );
-    }));
   }
 }
 
