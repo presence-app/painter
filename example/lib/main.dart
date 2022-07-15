@@ -101,8 +101,6 @@ class _ExamplePageState extends State<ExamplePage> {
             Navigator.of(context).push(MaterialPageRoute(builder: (context) {
               final controller = PainterController.fromJson(json);
 
-              print(controller.toJson());
-
               return Scaffold(
                 appBar: AppBar(),
                 body: ListView(children: [

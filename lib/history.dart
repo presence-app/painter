@@ -318,8 +318,27 @@ class _PathHistory {
   }
 
   Map<String, dynamic> toJson() {
+    List<_Path> pathsCopy = [..._paths];
+
+    {
+      // A filter that removes anything that is behind the last rect, since it
+      // won't be visible anyways. This happens to reduce the json result, saving
+      // memory data
+      final lastRect = pathsCopy.lastWhere(
+        (path) => path.info is _RectPathInfo,
+        orElse: () => _Path(
+          info: const _RectPathInfo(rect: Rect.zero),
+          paint: Paint(),
+        ),
+      );
+      final lastRectIndex = pathsCopy.indexOf(lastRect);
+      // we can't remove the rect if it's the first element in the list, so we
+      // check if it's the (second>) element
+      if (lastRectIndex > 0) pathsCopy.removeRange(0, lastRectIndex);
+    }
+
     return {
-      'paths': _paths.map<Map<String, dynamic>>((path) {
+      'paths': pathsCopy.map<Map<String, dynamic>>((path) {
         return {
           'path': path.info.json,
           'paint': path.paint.toJson(),
