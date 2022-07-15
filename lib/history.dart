@@ -8,7 +8,7 @@ abstract class _PathInfo {
   Map<String, dynamic> get json;
 
   static _PathInfo _fromJson(Map<String, dynamic> data) {
-    switch (data['type']) {
+    switch (data['type'] as String) {
       case 'line':
         return _LinePathInfo.fromJson(data);
       case 'circle':
@@ -195,10 +195,10 @@ extension _HexColor on Color {
     return Color(int.parse(buffer.toString(), radix: 16));
   }
 
-  String toHex() => '${red.toRadixString(16).padLeft(2, '0')}'
+  String toHex() => '${alpha.toRadixString(16).padLeft(2, '0')}'
+      '${red.toRadixString(16).padLeft(2, '0')}'
       '${green.toRadixString(16).padLeft(2, '0')}'
-      '${blue.toRadixString(16).padLeft(2, '0')}'
-      '${alpha.toRadixString(16).padLeft(2, '0')}';
+      '${blue.toRadixString(16).padLeft(2, '0')}';
 }
 
 class _PathHistory {
@@ -209,7 +209,6 @@ class _PathHistory {
   double strokeWidth;
   BlendMode blendMode = BlendMode.srcOver;
 
-  final Paint _backgroundPaint = Paint()..blendMode = BlendMode.dstOver;
   bool _inDrag = false;
 
   bool get isEmpty => _paths.isEmpty || (_paths.length == 1 && _inDrag);
@@ -220,10 +219,6 @@ class _PathHistory {
 
   factory _PathHistory.fromJson(Map<String, dynamic> json) {
     return _PathHistory().._paths.addAll(_fromJson(json));
-  }
-
-  void setBackgroundColor(Color backgroundColor) {
-    _backgroundPaint.color = backgroundColor;
   }
 
   void undo() {
@@ -252,8 +247,7 @@ class _PathHistory {
   void addRect(Rect rect) {
     if (!_inDrag) {
       _inDrag = true;
-      Path path = Path();
-      path.addRect(rect);
+      _paths.clear();
       _paths.add(_Path(
         info: _RectPathInfo(rect: rect),
         paint: Paint()
@@ -320,10 +314,6 @@ class _PathHistory {
           ..strokeJoin = StrokeJoin.round,
       );
     }
-    canvas.drawRect(
-      Rect.fromLTWH(0.0, 0.0, size.width, size.height),
-      _backgroundPaint,
-    );
     canvas.restore();
   }
 

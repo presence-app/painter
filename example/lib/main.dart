@@ -98,25 +98,30 @@ class _ExamplePageState extends State<ExamplePage> {
               return encoder.convert(jsonObject);
             }
 
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (context) => ListView(
-                children: [
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+              final controller = PainterController.fromJson(json);
+
+              print(controller.toJson());
+
+              return Scaffold(
+                appBar: AppBar(),
+                body: ListView(children: [
                   SizedBox(
-                    width: 400,
-                    child: Container(
-                      color: Colors.white,
+                    height: 400,
+                    child: Center(
                       child: AspectRatio(
-                        aspectRatio: 1.0,
-                        child: Painter(PainterController.fromJson(json)),
+                        aspectRatio: 9 / 16,
+                        child: Container(
+                          color: Colors.blue,
+                          child: IgnorePointer(child: Painter(controller)),
+                        ),
                       ),
                     ),
                   ),
                   Text(getPrettyJSONString(json)),
-                ],
-              ),
-            );
+                ]),
+              );
+            }));
           },
         ),
       ];
@@ -130,10 +135,16 @@ class _ExamplePageState extends State<ExamplePage> {
           child: DrawBar(_controller),
         ),
       ),
-      body: Center(
-        child: AspectRatio(
-          aspectRatio: 1.0,
-          child: Painter(_controller),
+      body: SizedBox(
+        height: 400,
+        child: Center(
+          child: AspectRatio(
+            aspectRatio: 9 / 16,
+            child: Container(
+              color: Colors.blue,
+              child: Painter(_controller),
+            ),
+          ),
         ),
       ),
     );
@@ -214,19 +225,16 @@ class DrawBar extends StatelessWidget {
           ),
         );
       }),
-      ColorPickerButton(_controller, false),
-      ColorPickerButton(_controller, true),
+      ColorPickerButton(_controller),
     ]);
   }
 }
 
 class ColorPickerButton extends StatefulWidget {
   final PainterController _controller;
-  final bool _background;
 
   const ColorPickerButton(
-    this._controller,
-    this._background, [
+    this._controller, [
     Key? key,
   ]) : super(key: key);
 
@@ -239,9 +247,7 @@ class _ColorPickerButtonState extends State<ColorPickerButton> {
   Widget build(BuildContext context) {
     return IconButton(
         icon: Icon(_iconData, color: _color),
-        tooltip: widget._background
-            ? 'Change background color'
-            : 'Change draw color',
+        tooltip: 'Change draw color',
         onPressed: _pickColor);
   }
 
@@ -269,18 +275,11 @@ class _ColorPickerButtonState extends State<ColorPickerButton> {
     });
   }
 
-  Color get _color => widget._background
-      ? widget._controller.backgroundColor
-      : widget._controller.drawColor;
+  Color get _color => widget._controller.drawColor;
 
-  IconData get _iconData =>
-      widget._background ? Icons.format_color_fill : Icons.brush;
+  IconData get _iconData => Icons.brush;
 
   set _color(Color color) {
-    if (widget._background) {
-      widget._controller.backgroundColor = color;
-    } else {
-      widget._controller.drawColor = color;
-    }
+    widget._controller.drawColor = color;
   }
 }

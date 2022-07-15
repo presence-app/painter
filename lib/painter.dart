@@ -157,7 +157,6 @@ class PictureDetails {
 /// Used with a [Painter] widget to control drawing.
 class PainterController extends ChangeNotifier {
   Color _drawColor = const Color.fromARGB(255, 0, 0, 0);
-  Color _backgroundColor = const Color.fromARGB(255, 255, 255, 255);
   bool _eraseMode = false;
 
   double _thickness = 1.0;
@@ -194,15 +193,6 @@ class PainterController extends ChangeNotifier {
     _updatePaint();
   }
 
-  /// Retrieves the current background color.
-  Color get backgroundColor => _backgroundColor;
-
-  /// Updates the background color.
-  set backgroundColor(Color color) {
-    _backgroundColor = color;
-    _updatePaint();
-  }
-
   /// Returns the current thickness that is used for drawing.
   double get thickness => _thickness;
 
@@ -227,8 +217,6 @@ class PainterController extends ChangeNotifier {
       ..color = paint.color
       ..strokeWidth = paint.strokeWidth
       ..blendMode = paint.blendMode;
-
-    _pathHistory.setBackgroundColor(backgroundColor);
 
     notifyListeners();
   }
