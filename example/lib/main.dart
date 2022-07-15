@@ -38,7 +38,6 @@ class _ExamplePageState extends State<ExamplePage> {
   static PainterController _newController() {
     PainterController controller = PainterController();
     controller.thickness = 5.0;
-    controller.backgroundColor = Colors.green;
     return controller;
   }
 
@@ -66,9 +65,9 @@ class _ExamplePageState extends State<ExamplePage> {
           onPressed: () {
             if (_controller.isEmpty) {
               showModalBottomSheet(
-                  context: context,
-                  builder: (BuildContext context) =>
-                      const Text('Nothing to undo'));
+                context: context,
+                builder: (context) => const Text('Nothing to undo'),
+              );
             } else {
               _controller.undo();
             }
@@ -101,10 +100,21 @@ class _ExamplePageState extends State<ExamplePage> {
 
             showModalBottomSheet(
               context: context,
-              builder: (context) => SingleChildScrollView(
-                child: Text(
-                  getPrettyJSONString(json),
-                ),
+              isScrollControlled: true,
+              builder: (context) => ListView(
+                children: [
+                  SizedBox(
+                    width: 400,
+                    child: Container(
+                      color: Colors.white,
+                      child: AspectRatio(
+                        aspectRatio: 1.0,
+                        child: Painter(PainterController.fromJson(json)),
+                      ),
+                    ),
+                  ),
+                  Text(getPrettyJSONString(json)),
+                ],
               ),
             );
           },
