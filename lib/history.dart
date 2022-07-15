@@ -167,16 +167,21 @@ extension _PaintExtension on Paint {
       'color': color.toHex(),
       'strokeWidth': strokeWidth,
       'style': style.name,
+      'blendMode': blendMode.name,
     };
   }
 
   static Paint fromJson(Map<String, dynamic> json) {
     return Paint()
       ..color = _HexColor.fromHex(json['color'])
-      ..strokeWidth = json['strokeWidth']
+      ..strokeWidth = json['strokeWidth'].toDouble()
       ..style = PaintingStyle.values.firstWhere(
         (style) => style.name == json['style'],
         orElse: () => PaintingStyle.fill,
+      )
+      ..blendMode = BlendMode.values.firstWhere(
+        (mode) => mode.name == json['blendMode'],
+        orElse: () => BlendMode.srcOver,
       );
   }
 }
@@ -199,17 +204,19 @@ extension _HexColor on Color {
 class _PathHistory {
   final List<_Path> _redoPaths = [];
   final List<_Path> _paths = [];
-  Paint currentPaint;
+
+  Color color;
+  double strokeWidth;
+  BlendMode blendMode = BlendMode.srcOver;
+
   final Paint _backgroundPaint = Paint()..blendMode = BlendMode.dstOver;
   bool _inDrag = false;
 
   bool get isEmpty => _paths.isEmpty || (_paths.length == 1 && _inDrag);
 
   _PathHistory()
-      : currentPaint = Paint()
-          ..color = Colors.black
-          ..strokeWidth = 1.0
-          ..style = PaintingStyle.fill;
+      : color = Colors.black,
+        strokeWidth = 1.0;
 
   factory _PathHistory.fromJson(Map<String, dynamic> json) {
     return _PathHistory().._paths.addAll(_fromJson(json));
@@ -249,7 +256,11 @@ class _PathHistory {
       path.addRect(rect);
       _paths.add(_Path(
         info: _RectPathInfo(rect: rect),
-        paint: currentPaint..style = PaintingStyle.fill,
+        paint: Paint()
+          ..style = PaintingStyle.fill
+          ..color = color
+          ..strokeWidth = strokeWidth
+          ..blendMode = blendMode,
       ));
     }
   }
@@ -260,9 +271,13 @@ class _PathHistory {
       _paths.add(_Path(
         info: _CirclePathInfo(
           point: point,
-          radius: currentPaint.strokeWidth,
+          radius: strokeWidth / 2,
         ),
-        paint: currentPaint..style = PaintingStyle.fill,
+        paint: Paint()
+          ..style = PaintingStyle.fill
+          ..color = color
+          ..strokeWidth = strokeWidth
+          ..blendMode = blendMode,
       ));
     }
   }
@@ -275,7 +290,11 @@ class _PathHistory {
           startingPoint: startPoint,
           lines: [],
         ),
-        paint: currentPaint..style = PaintingStyle.stroke,
+        paint: Paint()
+          ..style = PaintingStyle.stroke
+          ..color = color
+          ..strokeWidth = strokeWidth
+          ..blendMode = blendMode,
       ));
     }
   }
@@ -294,7 +313,12 @@ class _PathHistory {
   void draw(Canvas canvas, Size size) {
     canvas.saveLayer(Offset.zero & size, Paint());
     for (final path in _paths) {
-      canvas.drawPath(path.info.path, path.paint);
+      canvas.drawPath(
+        path.info.path,
+        path.paint
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
     }
     canvas.drawRect(
       Rect.fromLTWH(0.0, 0.0, size.width, size.height),

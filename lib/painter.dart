@@ -221,11 +221,13 @@ class PainterController extends ChangeNotifier {
       paint.color = drawColor;
       paint.blendMode = BlendMode.srcOver;
     }
-    paint.style = PaintingStyle.stroke;
     paint.strokeWidth = thickness;
-    paint.strokeCap = StrokeCap.round;
-    paint.strokeJoin = StrokeJoin.round;
-    _pathHistory.currentPaint = paint;
+
+    _pathHistory
+      ..color = paint.color
+      ..strokeWidth = paint.strokeWidth
+      ..blendMode = paint.blendMode;
+
     _pathHistory.setBackgroundColor(backgroundColor);
 
     notifyListeners();
